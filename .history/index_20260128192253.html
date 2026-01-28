@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>smart summarizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📰 smart summarizer</h1>
+      <select id="themeSelector">
+        <option value="dark">dark</option>
+        <option value="light">light</option>
+      </select>
+    </header>
+
+    <div class="input-area">
+      <textarea id="inputText" placeholder="paste article text or url here..."></textarea>
+      <button id="summarizeBtn">summarize</button>
+    </div>
+
+    <div class="output">
+      <h2>summary</h2>
+      <p id="summary"></p>
+    </div>
+
+    <div class="history">
+      <h3>recent summaries</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

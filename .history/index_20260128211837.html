@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowRoutine | Modern Routine Builder</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-calendar-alt"></i>
+                <span>FlowRoutine</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link active" data-tab="routine-builder"><i class="fas fa-plus-circle"></i> Builder</a>
+                <a href="#" class="nav-link" data-tab="my-routines"><i class="fas fa-list"></i> My Routines</a>
+                <a href="#" class="nav-link" data-tab="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
+                <a href="#" class="nav-link" data-tab="settings"><i class="fas fa-cog"></i> Settings</a>
+            </div>
+            <div class="user-section">
+                <button class="btn-outline" id="export-btn"><i class="fas fa-download"></i> Export</button>
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Routine Builder Tab -->
+        <section id="routine-builder" class="tab-content active">
+            <div class="header-section">
+                <h1><i class="fas fa-magic"></i> Routine Builder</h1>
+                <p class="subtitle">Design your perfect daily, weekly, or monthly routine with our intuitive builder</p>
+            </div>
+
+            <div class="builder-container">
+                <!-- Left Panel: Task Library -->
+                <div class="panel task-library">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-th-large"></i> Task Library</h3>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search tasks..." id="task-search">
+                        </div>
+                    </div>
+                    <div class="task-categories">
+                        <button class="category-btn active" data-category="all">All</button>
+                        <button class="category-btn" data-category="morning">Morning</button>
+                        <button class="category-btn" data-category="work">Work</button>
+                        <button class="category-btn" data-category="fitness">Fitness</button>
+                        <button class="category-btn" data-category="evening">Evening</button>
+                    </div>
+                    <div class="task-list" id="task-library-list">
+                        <!-- Task items will be dynamically added here -->
+                    </div>
+                    <div class="custom-task">
+                        <h4><i class="fas fa-plus-circle"></i> Add Custom Task</h4>
+                        <div class="custom-task-form">
+                            <input type="text" placeholder="Task name" id="custom-task-name">
+                            <select id="custom-task-category">
+                                <option value="custom">Custom</option>
+                                <option value="morning">Morning</option>
+                                <option value="work">Work</option>
+                                <option value="fitness">Fitness</option>
+                                <option value="evening">Evening</option>
+                            </select>
+                            <button class="btn-small" id="add-custom-task"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Panel: Routine Timeline -->
+                <div class="panel routine-timeline">
+                    <div class="panel-header timeline-header">
+                        <h3><i class="fas fa-clock"></i> Daily Routine</h3>
+                        <div class="timeline-actions">
+                            <select id="routine-type">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                            <button class="btn-secondary" id="clear-routine"><i class="fas fa-trash"></i> Clear</button>
+                            <button class="btn-primary" id="save-routine"><i class="fas fa-save"></i> Save Routine</button>
+                        </div>
+                    </div>
+                    <div class="timeline-container">
+                        <div class="time-slots">
+                            <!-- Time slots will be dynamically added here -->
+                        </div>
+                        <div class="routine-tasks" id="routine-tasks-container">
+                            <!-- Routine tasks will be dynamically added here -->
+                        </div>
+                    </div>
+                    <div class="routine-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Tasks:</span>
+                            <span class="summary-value" id="total-tasks">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Duration:</span>
+                            <span class="summary-value" id="total-duration">0h 0m</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Productivity Score:</span>
+                            <span class="summary-value" id="productivity-score">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Task Details -->
+                <div class="panel task-details">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-info-circle"></i> Task Details</h3>
+                    </div>
+                    <div class="details-container">
+                        <div class="detail-section">
+                            <h4>Selected Task</h4>
+                            <div class="selected-task-info" id="selected-task-info">
+                                <p class="no-selection">No task selected. Click on a task to view details.</p>
+                            </div>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Task Settings</h4>
+                            <div class="task-settings">
+                                <div class="setting">
+                                    <label for="task-duration"><i class="fas fa-clock"></i> Duration (minutes)</label>
+                                    <input type="number" id="task-duration" min="5" max="240" value="30">
+                                </div>
+                                <div class="setting">
+                                    <label for="task-priority"><i class="fas fa-flag"></i> Priority</label>
+                                    <select id="task-priority">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                <div class="setting">
+                                    <label for="task-color"><i class="fas fa-palette"></i> Color</label>
+                                    <div class="color-options">
+                                        <div class="color-option" data-color="#4f46e5" style="background-color: #4f46e5;"></div>
+                                        <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
+                                        <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
+                                        <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
+                                        <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
+                                    </div>
+                                </div>
+                                <div class="setting">
+                                    <label><i class="fas fa-bell"></i> Reminders</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="reminder-toggle">
+                                        <span class="toggle-slider"></span>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary full-width" id="update-task-btn" disabled><i class="fas fa-sync-alt"></i> Update Task</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Routines Tab -->
+        <section id="my-routines" class="tab-content">
+            <div class="header-section">
+                <h1><i class="fas fa-list"></i> My Routines</h1>
+                <p class="subtitle">Manage and organize your saved routines</p>
+            </div>
+            <div class="routines-container" id="saved-routines">
+                <!-- Saved routines will be dynamically added here -->
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <h3>No routines saved yet</h3>
+                    <p>Create your first routine using the Builder tab</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Tab -->
+        <section id="analytics" class="tab-content">
+            <div class="header-section">
+                <h1><i class="fas fa-chart-bar"></i> Analytics</h1>
+                <p class="subtitle">Track your productivity and routine adherence</p>
+            </div>
+            <div class="analytics-container">
+                <div class="analytics-card">
+                    <div class="analytics-header">
+                        <h3><i class="fas fa-chart-line"></i> Weekly Completion</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="completion-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-header">
+                        <h3><i class="fas fa-tasks"></i> Task Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="distribution-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-card stats-card">
+                    <div class="analytics-header">
+                        <h3><i class="fas fa-star"></i> Performance Stats</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="avg-completion">0%</div>
+                            <div class="stat-label">Avg. Completion</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-hours">0</div>
+                            <div class="stat-label">Total Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="consistency-streak">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="productivity-trend">+0%</div>
+                            <div class="stat-label">Trend</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Tab -->
+        <section id="settings" class="tab-content">
+            <div class="header-section">
+                <h1><i class="fas fa-cog"></i> Settings</h1>
+                <p class="subtitle">Customize your FlowRoutine experience</p>
+            </div>
+            <div class="settings-container">
+                <div class="settings-card">
+                    <h3><i class="fas fa-user"></i> Profile</h3>
+                    <div class="setting-item">
+                        <label for="user-name">Name</label>
+                        <input type="text" id="user-name" placeholder="Enter your name">
+                    </div>
+                    <div class="setting-item">
+                        <label for="user-email">Email</label>
+                        <input type="email" id="user-email" placeholder="Enter your email">
+                    </div>
+                    <div class="setting-item">
+                        <label for="user-theme">Theme</label>
+                        <select id="user-theme">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-card">
+                    <h3><i class="fas fa-bell"></i> Notifications</h3>
+                    <div class="setting-item">
+                        <label>Task Reminders</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="notifications-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Daily Summary</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="daily-summary-toggle">
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Weekly Report</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="weekly-report-toggle">
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-card">
+                    <h3><i class="fas fa-share-alt"></i> Export & Backup</h3>
+                    <div class="setting-item">
+                        <p>Export your routines as JSON, CSV, or PDF</p>
+                        <div class="export-options">
+                            <button class="btn-small" id="export-json"><i class="fas fa-file-code"></i> JSON</button>
+                            <button class="btn-small" id="export-csv"><i class="fas fa-file-csv"></i> CSV</button>
+                            <button class="btn-small" id="export-pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <p>Import routines from a JSON file</p>
+                        <button class="btn-outline full-width" id="import-routines"><i class="fas fa-file-import"></i> Import Routines</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span class="toast-message">Routine saved successfully!</span>
+        </div>
+    </div>
+
+    <!-- Modal for saving routine -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-save"></i> Save Routine</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="routine-name">Routine Name</label>
+                    <input type="text" id="routine-name" placeholder="e.g., Morning Productivity Routine">
+                </div>
+                <div class="form-group">
+                    <label for="routine-description">Description (optional)</label>
+                    <textarea id="routine-description" placeholder="Describe your routine..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="routine-tags">Tags (comma separated)</label>
+                    <input type="text" id="routine-tags" placeholder="e.g., morning, productivity, workout">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary modal-cancel">Cancel</button>
+                <button class="btn-primary" id="confirm-save">Save Routine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
