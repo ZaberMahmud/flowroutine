@@ -569,26 +569,23 @@ function checkAllTimeConflicts() {
     if (state.routineTasks.length <= 1) return conflicts;
     
     for (let i = 0; i < state.routineTasks.length; i++) {
-        const task = state.routineTasks[i];
-        const taskStart = task.startTime;
-        const taskEnd = taskStart + (task.duration / 60);
-        
-        for (let j = 0; j < state.routineTasks.length; j++) {
-            if (i === j) continue; // Skip self-comparison
+        for (let j = i + 1; j < state.routineTasks.length; j++) { // Start from i+1
+            const task1 = state.routineTasks[i];
+            const task2 = state.routineTasks[j];
             
-            const otherTask = state.routineTasks[j];
-            const otherStart = otherTask.startTime;
-            const otherEnd = otherStart + (otherTask.duration / 60);
+            const task1Start = task1.startTime;
+            const task1End = task1Start + (task1.duration / 60);
+            const task2Start = task2.startTime;
+            const task2End = task2Start + (task2.duration / 60);
             
             // Check for overlap (allowing 5-minute buffer)
             const buffer = 5 / 60;
-            
-            // Check if time ranges overlap
-            const hasConflict = (taskStart < otherEnd + buffer && taskEnd > otherStart - buffer);
+            const hasConflict = (task1Start < task2End + buffer && task1End > task2Start - buffer);
             
             if (hasConflict) {
                 if (!conflicts.includes(i)) conflicts.push(i);
                 if (!conflicts.includes(j)) conflicts.push(j);
+                break; // Found a conflict, no need to check further for this task
             }
         }
     }
@@ -1356,11 +1353,14 @@ function generateBoxTableSchedule() {
             <!-- Timeline Header -->
             <div style="display: flex; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                       border-radius: 10px 10px 0 0; color: white;">
-                <div style="flex: 0 0 100px; font-weight: 600; padding-right: 15px; border-right: 1px solid rgba(255,255,255,0.2);">
+                <div style="flex: 0 0 120px; font-weight: 600; padding-right: 15px; border-right: 1px solid rgba(255,255,255,0.2);">
                     Time
                 </div>
                 <div style="flex: 1; font-weight: 600; padding-left: 15px;">
-                    Tasks & Activities
+                    Activity / Task
+                </div>
+                <div style="flex: 0 0 100px; font-weight: 600; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);">
+                    Duration
                 </div>
             </div>
             
@@ -1369,7 +1369,6 @@ function generateBoxTableSchedule() {
     `;
     
     // Group tasks by time slots (each hour)
-    const timeSlots = [];
     for (let hour = 6; hour <= 20; hour++) {
         const period = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
@@ -1380,128 +1379,196 @@ function generateBoxTableSchedule() {
             return taskHour === hour;
         });
         
-        // Skip empty time slots
+        // Skip empty time slots (only show every 2 hours if empty)
         if (hourTasks.length === 0 && hour % 2 !== 0) continue;
         
-        timeSlots.push({
-            hour,
-            displayTime: `${displayHour}:00 ${period}`,
-            tasks: hourTasks
-        });
-    }
-    
-    // Render each time slot
-    timeSlots.forEach((slot, index) => {
-        const isAlternate = index % 2 === 0;
+        const isAlternate = hour % 2 === 0;
         
         scheduleHTML += `
-            <div style="display: flex; border-bottom: ${index < timeSlots.length - 1 ? '1px solid #f1f5f9' : 'none'}; 
+            <div style="display: flex; border-bottom: ${hour < 20 ? '1px solid #f1f5f9' : 'none'}; 
                       ${isAlternate ? 'background: #f8fafc;' : 'background: white;'}">
-                <div style="flex: 0 0 100px; padding: 20px; font-weight: 600; color: #4f46e5; 
+                <div style="flex: 0 0 120px; padding: 20px; font-weight: 600; color: #4f46e5; 
                           border-right: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center;">
-                    ${slot.displayTime}
+                    ${displayHour}:00 ${period}
                 </div>
                 <div style="flex: 1; padding: 15px; min-height: 70px;">
         `;
         
-        if (slot.tasks.length > 0) {
-            // Group tasks that span multiple hours
-            const hourTasks = [...slot.tasks];
-            
-            hourTasks.forEach(task => {
+        if (hourTasks.length > 0) {
+            // Display each task at this hour
+            hourTasks.forEach((task, index) => {
                 const startTime = task.startTime;
                 const endTime = startTime + (task.duration / 60);
-                const taskHour = Math.floor(startTime);
-                const taskMinute = Math.round((startTime - taskHour) * 60);
+                const startHour = Math.floor(startTime);
+                const startMinute = Math.round((startTime - startHour) * 60);
                 
                 const startTimeFormatted = formatTime(startTime);
                 const endTimeFormatted = formatTime(endTime);
                 
-                // Calculate width for tasks that span less than an hour
-                let widthClass = 'auto';
-                if (task.duration < 60) {
-                    widthClass = `${Math.max(30, (task.duration / 60) * 100)}%`;
-                }
-                
                 scheduleHTML += `
-                    <div style="margin-bottom: 10px;">
-                        <div style="display: inline-block; padding: 12px 15px; background: ${task.color}; 
-                                  color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                                  border-left: 4px solid ${getDarkerColor(task.color)}; min-width: 200px; width: ${widthClass};">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                                <div style="font-weight: 600; font-size: 14px;">${task.name}</div>
-                                <div style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; 
-                                          font-size: 11px; text-transform: uppercase;">
-                                    ${task.priority}
+                    <div style="margin-bottom: ${index < hourTasks.length - 1 ? '10px' : '0'};">
+                        <div style="display: flex; align-items: center; gap: 15px; padding: 12px 15px; 
+                                  background: ${task.color}; color: white; border-radius: 8px; 
+                                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">
+                                    ${task.name}
+                                    <span style="font-size: 12px; opacity: 0.9; margin-left: 10px;">
+                                        (${task.category})
+                                    </span>
+                                </div>
+                                <div style="font-size: 13px; opacity: 0.9;">
+                                    <i class="fas fa-clock"></i> ${startTimeFormatted} - ${endTimeFormatted}
+                                    <span style="margin-left: 15px;">
+                                        <i class="fas fa-flag"></i> ${task.priority} priority
+                                    </span>
                                 </div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.9;">
-                                <span><i class="fas fa-clock"></i> ${startTimeFormatted} - ${endTimeFormatted}</span>
-                                <span><i class="fas fa-stopwatch"></i> ${task.duration} min</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                                <span style="font-size: 11px; background: rgba(255,255,255,0.15); padding: 3px 8px; 
-                                          border-radius: 12px; text-transform: capitalize;">
-                                    ${task.category}
-                                </span>
-                                ${task.duration >= 90 ? '<span style="font-size: 11px;"><i class="fas fa-brain"></i> Deep Work</span>' : ''}
+                            <div style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; 
+                                      font-size: 14px; font-weight: 600;">
+                                ${task.duration} min
                             </div>
                         </div>
-                        ${task.duration >= 90 ? `
-                            <div style="margin-top: 5px; font-size: 11px; color: #6b7280;">
-                                <i class="fas fa-lightbulb"></i> Pro tip: ${task.duration}-minute sessions are ideal for focused work
+                        
+                        <!-- Task Details Row -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; 
+                                  margin-top: 8px; padding-left: 10px;">
+                            <div style="font-size: 12px; color: #6b7280;">
+                                <span style="display: inline-block; width: 12px; height: 12px; 
+                                          background: ${task.color}; border-radius: 50%; margin-right: 5px;"></span>
+                                ${getTaskDescription(task)}
                             </div>
-                        ` : ''}
+                            ${getTaskIcon(task)}
+                        </div>
                     </div>
                 `;
             });
         } else {
             scheduleHTML += `
-                <div style="color: #9ca3af; font-style: italic; text-align: center; padding: 20px 0; display: flex; 
-                          align-items: center; justify-content: center; gap: 8px;">
-                    <i class="fas fa-coffee"></i> Free time / Break
+                <div style="color: #9ca3af; font-style: italic; text-align: center; padding: 20px 0; 
+                          display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px;">
+                    <i class="fas fa-coffee"></i> Free Time / Break
                 </div>
             `;
         }
         
         scheduleHTML += `
                 </div>
+                <div style="flex: 0 0 100px; padding: 20px; border-left: 1px solid #e5e7eb; 
+                          display: flex; align-items: center; justify-content: center; font-weight: 500; color: #6b7280;">
+                    ${hourTasks.length > 0 ? `${hourTasks.reduce((sum, t) => sum + t.duration, 0)} min` : 'Free'}
+                </div>
             </div>
         `;
-    });
+    }
     
     scheduleHTML += `
             </div>
         </div>
         
-        <!-- Summary Cards -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
-                <div style="font-size: 24px; font-weight: bold;">${sortedTasks.length}</div>
-                <div style="font-size: 12px; opacity: 0.9;">Total Tasks</div>
+        <!-- Legend for Activities -->
+        <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <h4 style="margin-bottom: 15px; color: #1f2937; font-size: 16px;">
+                <i class="fas fa-key"></i> Activity Legend
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                ${generateActivityLegend()}
             </div>
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 10px; color: white;">
-                <div style="font-size: 24px; font-weight: bold;">
-                    ${Math.round(sortedTasks.reduce((sum, task) => sum + task.duration, 0) / 60 * 10) / 10}h
-                </div>
-                <div style="font-size: 12px; opacity: 0.9;">Total Duration</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 10px; color: white;">
-                <div style="font-size: 24px; font-weight: bold;">
-                    ${sortedTasks.filter(t => t.priority === 'high').length}
-                </div>
-                <div style="font-size: 12px; opacity: 0.9;">High Priority</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 20px; border-radius: 10px; color: white;">
-                <div style="font-size: 24px; font-weight: bold;">
-                    ${new Set(sortedTasks.map(t => t.category)).size}
-                </div>
-                <div style="font-size: 12px; opacity: 0.9;">Categories</div>
+        </div>
+        
+        <!-- Task Summary -->
+        <div style="margin-top: 30px;">
+            <h4 style="margin-bottom: 15px; color: #1f2937; font-size: 16px;">
+                <i class="fas fa-tasks"></i> Task Breakdown
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                ${generateTaskBreakdown()}
             </div>
         </div>
     `;
     
     return scheduleHTML;
+}
+
+// Helper function to get task description
+function getTaskDescription(task) {
+    const descriptions = {
+        'Morning Meditation': 'Start your day with mindfulness and focus',
+        'Breakfast': 'Fuel your body for the day ahead',
+        'Exercise': 'Boost energy and improve health',
+        'Check Emails': 'Review and respond to important messages',
+        'Deep Work Session': 'Focused, uninterrupted work time',
+        'Lunch Break': 'Recharge with a meal and short rest',
+        'Meeting': 'Team collaboration and discussions',
+        'Reading': 'Learn and relax with a good book',
+        'Dinner': 'Evening meal and family time',
+        'Plan Tomorrow': 'Prepare for a productive tomorrow',
+        'Evening Walk': 'Relax and get some fresh air'
+    };
+    
+    return descriptions[task.name] || `${task.category} activity`;
+}
+
+// Helper function to get task icon
+function getTaskIcon(task) {
+    const icons = {
+        'morning': '🌅',
+        'work': '💼',
+        'fitness': '💪',
+        'evening': '🌙',
+        'custom': '📝'
+    };
+    
+    const icon = icons[task.category] || '✅';
+    return `<span style="font-size: 18px;">${icon}</span>`;
+}
+
+// Helper function to generate activity legend
+function generateActivityLegend() {
+    const categories = [...new Set(state.routineTasks.map(t => t.category))];
+    
+    return categories.map(category => {
+        const tasks = state.routineTasks.filter(t => t.category === category);
+        const color = tasks[0]?.color || '#6b7280';
+        
+        return `
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; 
+                      background: white; border-radius: 6px; border-left: 4px solid ${color};">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>
+                <div style="flex: 1; text-transform: capitalize; font-weight: 500;">${category}</div>
+                <div style="font-size: 12px; color: #6b7280;">${tasks.length} task${tasks.length !== 1 ? 's' : ''}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Helper function to generate task breakdown
+function generateTaskBreakdown() {
+    return state.routineTasks.map((task, index) => {
+        const startTime = formatTime(task.startTime);
+        const endTime = formatTime(task.startTime + (task.duration / 60));
+        
+        return `
+            <div style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; 
+                      border-left: 4px solid ${task.color};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: 600; color: #1f2937;">${task.name}</div>
+                    <div style="background: ${getPriorityColor(task.priority, 'bg')}; 
+                              color: ${getPriorityColor(task.priority, 'text')}; padding: 2px 8px; 
+                              border-radius: 12px; font-size: 11px;">
+                        ${task.priority}
+                    </div>
+                </div>
+                <div style="font-size: 13px; color: #6b7280; margin-bottom: 5px;">
+                    <i class="fas fa-clock"></i> ${startTime} - ${endTime} (${task.duration} min)
+                </div>
+                <div style="font-size: 12px; color: #6b7280; display: flex; justify-content: space-between;">
+                    <span>${task.category}</span>
+                    <span>${getTaskIcon(task)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function getDarkerColor(hex) {
@@ -1521,9 +1588,9 @@ function getDarkerColor(hex) {
 
 function getPriorityColor(priority, type = 'bg') {
     const colors = {
-        high: { bg: '#fee2e2', text: '#991b1b' },
-        medium: { bg: '#fef3c7', text: '#92400e' },
-        low: { bg: '#dcfce7', text: '#166534' }
+        high: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+        medium: { bg: '#fef3c7', text: '#92400e', border: '#fbbf24' },
+        low: { bg: '#dcfce7', text: '#166534', border: '#86efac' }
     };
     return colors[priority]?.[type] || (type === 'bg' ? '#e5e7eb' : '#6b7280');
 }
